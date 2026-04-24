@@ -28,7 +28,7 @@ const showList = (data = list) => {
     console.log("Chưa có công việc");
   } else {
     console.log("Danh sách công việc của bạn : ");
-    list.forEach((tasks, i) => {
+    data.forEach((tasks, i) => {
       const status = tasks.done ? "Hoàn thành" : "Chưa làm";
       console.log(`${i + 1}. ${tasks.name} - ${status}`);
     });
@@ -54,9 +54,8 @@ showMenu = () => {
 const input = (choice) => {
   switch (choice) {
     case "1":
-      loadData();
-      showList();
       getData();
+      showList();
       showMenu();
       break;
     case "2":
@@ -140,16 +139,16 @@ const input = (choice) => {
             1. Những công việc đã hoàn thành
             2. Những công việc chưa hoàn thành
             -----------------------------------
-            Nhập lựa chọn của bạn`,
+            Nhập lựa chọn của bạn : `,
         (choice) => {
-          if (choice === 1) {
+          if (choice === "1") {
             showList(list.filter((status) => status.done));
-          } else if (choice === 2) {
+          } else if (choice === "2") {
             showList(list.filter((status) => !status.done));
           }
+          showMenu();
         },
       );
-      showMenu();
       break;
     case "7":
       console.log("Thoát chương trình!");
