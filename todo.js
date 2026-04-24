@@ -1,7 +1,6 @@
 const readline = require("readline");
-const { fileURLToPath } = require("url");
 const fs = require("fs");
-
+const { stdout } = require("process");
 const FILE = "todo.json";
 
 const rl = readline.createInterface({
@@ -17,40 +16,38 @@ const getData = () => {
     list = JSON.parse(data);
   }
 };
-
-const saveData = () => {
+const loadData = () => {
   fs.writeFileSync(FILE, JSON.stringify(list, null, 2));
 };
 
+const findByID = (id) => {
+  return list.find((t) => t.id == id);
+};
 const showList = (data = list) => {
-  console.log("List of work:");
   if (data.length === 0) {
-    console.log("Dont have any work to do!");
+    console.log("Chưa có công việc");
   } else {
-    data.forEach((work, i) => {
-      const status = work.done ? "Done" : "in process";
-      console.log(`${work.id}.${work.name} - ${status}`);
+    console.log("Danh sách công việc của bạn : ");
+    list.forEach((tasks, i) => {
+      const status = tasks.done ? "Hoàn thành" : "Chưa làm";
+      console.log(`${i + 1}. ${tasks.name} - ${status}`);
     });
   }
 };
-const searchByID = (number) => {
-  return list.find((t) => t.id == number);
-};
-const showMenu = () => {
+showMenu = () => {
   rl.question(
-    `WELCOME TO TODO APP
-    1. Show job list
-    2. Add work need to do
-    3. Edit work's status
-    4. sửa
-    5. xóa
-    6. lọc
-    7. thoát
-    ---------------------
-    Enter your choice: `,
-    (choice) => {
-      input(choice);
-    },
+    `
+    Chào mừng đến với todoapp:
+    1. Xem danh sách công việc
+    2. Thêm công việc vào danh sách
+    3. Sửa công việc
+    4. Sửa trạng thái công việc
+    5. Xóa công việc
+    6. Bộ lọc
+    7. Thoát chương trình.
+    -----------------------
+    Nhập lựa chọn của bạn : `,
+    (choice) => input(choice),
   );
 };
 
@@ -62,83 +59,103 @@ const input = (choice) => {
       showMenu();
       break;
     case "2":
-      rl.question("Enter work you need to do: ", (job) => {
-        list.push({ id: Date.now(), name: job, done: false });
-        saveData();
-        console.log("DONE");
+      showList();
+      rl.question(` Nhập công việc cần làm : `, (task) => {
+        list.push({ id: Date.now(), name: task, done: false });
+        loadData();
+        console.log("Đã ghi công việc mới");
+        showList();
         showMenu();
       });
       break;
     case "3":
-      showList();
-      rl.question("Nhập id công việc :", (number) => {
-        const task = searchByID(number);
+      rl.question(` Nhập id công việc muốn sửa đổi :`, (id) => {
+        const task = findByID(id);
         if (task) {
-          task.done = true;
-          saveData();
-        } else {
-          console.log("Done exist in the list");
-        }
-        showMenu();
-      });
-
-      break;
-    case "4":
-      showList();
-      rl.question("Nhập số công việc cần sửa :", (number) => {
-        const task = searchByID(number);
-        if (task) {
-          rl.question("Nhập tên mới: ", (newName) => {
+          rl.question(` Nhập tên công việc mới : `, (newName) => {
             task.name = newName;
-            saveData();
+            loadData();
+            console.log(` 
+                Sửa tên công việc thành công
+                ----------------------------`);
+            showList();
             showMenu();
           });
         } else {
-          console.log("Không có trong danh sách ");
+          console.log("Không có trong danh sách");
           return showMenu();
         }
       });
       break;
+    case "4":
+      rl.question(` Nhập id công việc cần đổi trạng thái :`, (id) => {
+        const task = findByID(id);
+        if (task) {
+          rl.question(
+            `
+                    1. Ghi nhận hoàn thành
+                    2. Ghi nhận chưa hoàn thành`,
+            (status) => {
+              if (status === "1") {
+                task.done = true;
+                loadData();
+                showList();
+                showMenu();
+              } else if (status === "2") {
+                task.done = false;
+                loadData();
+                showList();
+                showMenu();
+              } else {
+                console.log("Lựa chọn không hợp lệ");
+                return showMenu();
+              }
+            },
+          );
+        }
+      });
+
+      break;
     case "5":
-      showList();
-      rl.question("Nhập tên số công việc muốn xóa : ", (number) => {
-        const task = searchByID(number);
+      rl.question(` Nhập id công việc cần xóa :`, (id) => {
+        const task = findByID(id);
         if (task) {
           list.splice(task, 1);
-          saveData();
-          console.log("xóa thành công ");
+          loadData();
+          console.log(`
+                    Xóa công việc thành công
+                    -------------------------`);
+          showList();
           showMenu();
         } else {
-          console.log("Không có trong danh sách0");
+          console.log("Không có trong danh sách");
           return showMenu();
         }
       });
       break;
     case "6":
       rl.question(
-        `
-          Chọn bộ lọc:
-          1. Đã xong
-          2. Chưa thực hiện
-          Nhập lựa chọn của bạn: 
-          `,
+        ` 
+            1. Những công việc đã hoàn thành
+            2. Những công việc chưa hoàn thành
+            -----------------------------------
+            Nhập lựa chọn của bạn`,
         (choice) => {
           if (choice === 1) {
-            showList(list.filter((t) => t.done));
+            showList(list.filter((status) => status.done));
           } else if (choice === 2) {
-            showList(list.filter((t) => !t.done));
-          } else {
-            console.log("lựa chọn không hợp lệ");
+            showList(list.filter((status) => !status.done));
           }
         },
       );
-
+      showMenu();
+      break;
     case "7":
-      console.log("Program has been close");
+      console.log("Thoát chương trình!");
       rl.close();
       break;
     default:
-      console.log("Only have 4 options");
+      console.log("Lựa chọn của bạn không hợp lệ ( Chọn từ 1 đến 7)");
       showMenu();
       break;
   }
