@@ -54,6 +54,7 @@ showMenu = () => {
 const input = (choice) => {
   switch (choice) {
     case "1":
+      loadData();
       showList();
       getData();
       showMenu();
